@@ -68,5 +68,8 @@ libraryDependencies += "com.bot4s" %% "telegram-core" % "4.4.0-RC2"
 libraryDependencies += "com.bot4s" %% "telegram-akka" % "4.4.0-RC2"
 libraryDependencies += "com.softwaremill.sttp" %% "async-http-client-backend-cats" % "1.7.2"
 
-addCompilerPlugin("org.scalamacros" %% "paradise"           % "2.1.1" cross CrossVersion.patch)
+addCompilerPlugin("org.scalamacros" %% "paradise"  % "2.1.1" cross CrossVersion.patch)
 
+libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.2"
+libraryDependencies += "com.h2database" % "h2" % "1.4.199"
+libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.27.2.1"
