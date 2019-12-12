@@ -14,31 +14,37 @@ class LifeAncestryBot[F[_] : Async : Timer : ContextShift](token: String) extend
   with Commands[F]
   with RegexCommands[F] {
 
-  ConnectionDB.initTables
+  val connectionDB = ConnectionDB
+
+  connectionDB.initTables
+
 
   override def receiveMessage(msg: Message): F[Unit] = {
-    if (existTree(msg.contact.map(_.userId.getOrElse(123)).getOrElse(123))) {
-      processMsg(msg)
+    implicit def message: Message = msg
+    implicit def id: Long = msg.source
+
+    if (existTree(userId)) {
+      processMsg(commands)
     } else {
-      if (processNotAuthMsg(msg.text.get)) {
-        sendMsg(msg.source, SUCCESS_AUTH)
+      if (processNotAuthMsg(commands)) {
+        sendMsg(SUCCESS_AUTH)
       } else {
-        sendMsg(msg.source, CREATE_OR_JOIN)
+        sendMsg(CREATE_OR_JOIN)
       }
     }
   }
 
-  def processMsg(msg: Message): F[Unit] = msg.text.get.split("//s+").head match {
-    case "/getAll" => getAll(msg)
-    case "/add" => add(msg)
-    case "/get" => get(msg)
-    case "/find" => find(msg)
-    case _ => sendMsg(msg.source, UNCNOWN_COMMAND)
+  def processMsg(commands: Array[String])(implicit id: Long, msg: Message): F[Unit] = commands match {
+    case Array("/getAll") => getAll(msg)
+    case Array("/add", _) => add(msg)
+    case Array("/get", _) => get(msg)
+    case Array("/find", _) => find(msg)
+    case _ => sendMsg(UNCNOWN_COMMAND)
   }
 
-  def processNotAuthMsg(msg: String): Boolean = msg.split("//s+").head match {
-    case "/create" => create(msg)
-    case "/join" => join(msg)
+  def processNotAuthMsg(commands: Array[String])(implicit msg: Message): Boolean = commands match {
+    case Array("/create", _) => create(commands)
+    case Array("/join", _) => join(commands)
     case _ => false
   }
 
@@ -52,10 +58,14 @@ class LifeAncestryBot[F[_] : Async : Timer : ContextShift](token: String) extend
 
   def add(msg: Message): F[Unit] = ???
 
-  def join(msg: String) = ???
+  def join(msg: Array[String]): Boolean = false
 
-  def create(msg: String) = false
+  def create(msg: Array[String]) = false
 
-  def sendMsg(id: Long, msg: String) = request(SendMessage(id, msg)).void
+  def sendMsg(msg: String)(implicit id: Long) = request(SendMessage(id, msg)).void
 
+  def userId(implicit message: Message): Int = message.contact.map(_.userId).map(_.getOrElse(-1)).getOrElse(-1)
+
+  def commands(implicit message: Message): Array[String] = message.text.getOrElse("").split("//s+")
 }
+
