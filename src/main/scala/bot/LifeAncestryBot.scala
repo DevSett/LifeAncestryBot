@@ -22,11 +22,13 @@ class LifeAncestryBot[F[_] : Async : Timer : ContextShift](token: String) extend
   override def receiveMessage(msg: Message): F[Unit] = {
     implicit def message: Message = msg
     implicit def id: Long = msg.source
+    implicit def commands(implicit message: Message): Array[String] = message.text.getOrElse("").split("//s+")
+    def userId(implicit message: Message): Int = message.contact.map(_.userId).map(_.getOrElse(-1)).getOrElse(-1)
 
     if (existTree(userId)) {
-      processMsg(commands)
+      processMsg
     } else {
-      if (processNotAuthMsg(commands)) {
+      if (processNotAuthMsg) {
         sendMsg(SUCCESS_AUTH)
       } else {
         sendMsg(CREATE_OR_JOIN)
@@ -34,38 +36,36 @@ class LifeAncestryBot[F[_] : Async : Timer : ContextShift](token: String) extend
     }
   }
 
-  def processMsg(commands: Array[String])(implicit id: Long, msg: Message): F[Unit] = commands match {
-    case Array("/getAll") => getAll(msg)
-    case Array("/add", _) => add(msg)
-    case Array("/get", _) => get(msg)
-    case Array("/find", _) => find(msg)
+  def processMsg(implicit id: Long, msg: Message, commands: Array[String]): F[Unit] = commands match {
+    case Array("/getAll") => getAll
+    case Array("/add", _) => add
+    case Array("/get", _) => get
+    case Array("/find", _) => find
     case _ => sendMsg(UNCNOWN_COMMAND)
   }
 
-  def processNotAuthMsg(commands: Array[String])(implicit msg: Message): Boolean = commands match {
-    case Array("/create", _) => create(commands)
-    case Array("/join", _) => join(commands)
+  def processNotAuthMsg(implicit msg: Message, commands: Array[String]): Boolean = commands match {
+    case Array("/create", _) => create
+    case Array("/join", _) => join
     case _ => false
   }
 
-  def existTree(userId: Int): Boolean = false
+  def existTree(userId: Int): Boolean = ???
 
-  def getAll(msg: Message): F[Unit] = ???
+  def getAll(implicit msg: Message): F[Unit] = ???
 
-  def get(msg: Message): F[Unit] = ???
+  def get(implicit msg: Message, commands: Array[String]): F[Unit] = ???
 
-  def find(msg: Message): F[Unit] = ???
+  def find(implicit msg: Message, commands: Array[String]): F[Unit] = ???
 
-  def add(msg: Message): F[Unit] = ???
+  def add(implicit msg: Message, commands: Array[String]): F[Unit] = ???
 
-  def join(msg: Array[String]): Boolean = false
+  def join(implicit commands: Array[String]): Boolean = ???
 
-  def create(msg: Array[String]) = false
+  def create(implicit commands: Array[String]) = ???
 
   def sendMsg(msg: String)(implicit id: Long) = request(SendMessage(id, msg)).void
 
-  def userId(implicit message: Message): Int = message.contact.map(_.userId).map(_.getOrElse(-1)).getOrElse(-1)
 
-  def commands(implicit message: Message): Array[String] = message.text.getOrElse("").split("//s+")
 }
 
