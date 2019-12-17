@@ -8,7 +8,7 @@ class TreesTable(tag: Tag) extends Table[Tree](tag, "TREE") {
 
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
-  def name = column[String]("NAME")
+  def name = column[String]("NAME", O.Unique)
 
   def key = column[String]("KEY", O.Unique)
 
