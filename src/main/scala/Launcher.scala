@@ -11,7 +11,6 @@ object Launcher extends IOApp {
   def run(args: List[String]): IO[ExitCode] =
     args match {
       case List("LifeAncestryBot", token) =>
-        print("start")
         Await.result(new LifeAncestryBot(token).startPolling(),Duration.Inf)
         IO(ExitCode.Success)
       case List(name, _) =>

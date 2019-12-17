@@ -140,6 +140,11 @@ object ConnectionDB {
   }
 
   object AncestryQuery {
+    def findAncestryFromSecondName(secondName: String) ={
+      val query = ancestrys.filter(ancestr => ancestr.secondName === secondName ).result
+      Await.result(db.run(query), Duration.Inf)
+    }
+
     def getAll(treeId: Int) = {
       Await.result(db.run(ancestrys.filter(_.treeId === treeId).result), Duration.Inf)
     }
@@ -165,7 +170,6 @@ object ConnectionDB {
         && ancestr.middleName === middleName).result
       Await.result(db.run(query), Duration.Inf)
     }
-
 
   }
 

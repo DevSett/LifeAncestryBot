@@ -86,29 +86,29 @@ class LifeAncestryBot(token: String) extends AkkaTelegramBot
 
 
   def processMsg(implicit id: Long, msg: Message, commands: Array[String]) = commands match {
-    case Array("/getAll") => getAll
+    case Array("/getall") => getAll
     case Array("/add") => add
     case Array("/get", secondName, firstName, middleName, number) => get(firstName, secondName, middleName, number)
-    case Array("/find", secondName, firstName, middleName) => find(firstName, secondName, middleName)
-    case Array("/getPhoto", secondName, firstName, middleName, number) => getPhoto(firstName, secondName, middleName, number)
-    case Array("/getPhotoTree") => getPhotoTree
+    case Array("/find", secondName) => find(secondName)
+    case Array("/getphoto", secondName, firstName, middleName, number) => getPhoto(firstName, secondName, middleName, number)
+    case Array("/getphototree") => getPhotoTree
 
-    case Array("/getKey") => getKey
-    case Array("/uploadTree") => uploadTree
-    case Array("/uploadAncestry", _, _, _) => uploadAncestry
+    case Array("/getkey") => getKey
+    case Array("/uploadtree") => uploadTree
+    case Array("/uploadancestry", _, _, _) => uploadAncestry
 
     case _ => sendMsg(UNKNOWN_COMMAND)
   }
 
   //command find
-  def find(firstName: String, secondName: String, middleName: String)(implicit msg: Message): Future[Unit] = {
-    val ancestrySeq = AncestryQuery.findAncestry(firstName, secondName, middleName)
+  def find(secondName: String)(implicit msg: Message): Future[Unit] = {
+    val ancestrySeq = AncestryQuery.findAncestryFromSecondName(secondName)
     if (ancestrySeq.isEmpty) {
       sendMsg(NOT_FOUND_ANCESTRY_NAME)
       return unit
     }
     var index = 0
-    sendMsg(ancestrySeq.map(anc => s"${index += 1}:${fullName(anc)}").mkString("\n"))
+    sendMsg( ancestrySeq.zipWithIndex.map{case (anc, index) => s"${index+1}: ${fullName(anc)}"}.mkString("\n"))
   }
 
   //command getAll
@@ -119,8 +119,7 @@ class LifeAncestryBot(token: String) extends AkkaTelegramBot
       return unit
     }
 
-    var index = 0
-    sendMsg(ancestrySeq.map(anc => s"${index += 1}:${fullName(anc)}").mkString("\n"))
+    sendMsg( ancestrySeq.zipWithIndex.map{case (anc, index) => s"${index+1}: ${fullName(anc)}"}.mkString("\n"))
   }
 
   //command add
@@ -497,7 +496,7 @@ class LifeAncestryBot(token: String) extends AkkaTelegramBot
           }
 
           addablesAncestry.put(userKey, buildAncestryWithMother(ancestry.id, addablesAncestry(userKey)))
-          addables.put(userKey, AddState.Mother)
+          addables.put(userKey, AddState.Partner)
           sendMsg(ADD_PARTNER)
           return true
         }
